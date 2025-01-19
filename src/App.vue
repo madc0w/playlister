@@ -5,6 +5,7 @@
 
 <script>
 import HelloWorld from './components/HelloWorld.vue';
+// wtf
 
 export default {
 	name: 'App',
