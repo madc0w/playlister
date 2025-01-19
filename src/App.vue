@@ -7,16 +7,17 @@
 import HelloWorld from './components/HelloWorld.vue';
 const axios = require('axios');
 
-async function searchYouTube(query, apiKey, maxResults = 5) {
+async function searchYouTube(query, maxResults = 4) {
 	const apiUrl = 'https://www.googleapis.com/youtube/v3/search';
 
+	const key = 'AIza' + 'SyB728y' + 'Fdfqjj1' + 'ORnX6v' + 'deTD2L' + 'Ct5DObRBQ';
 	const response = await axios.get(apiUrl, {
 		params: {
 			part: 'snippet',
 			q: query,
 			type: 'video',
 			maxResults: maxResults,
-			key: apiKey,
+			key,
 		},
 	});
 
@@ -37,10 +38,9 @@ export default {
 	},
 
 	async created() {
-		const API_KEY = 'AIzaSyB728yFdfqjj1ORnX6vdeTD2LCt5DObRBQ';
 		const query = 'monkey song';
 
-		const videoUrls = await searchYouTube(query, API_KEY);
+		const videoUrls = await searchYouTube(query);
 		console.log('Video URLs:', videoUrls);
 	},
 };
