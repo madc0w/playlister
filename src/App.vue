@@ -31,13 +31,15 @@
 					<div class="input-label">Genre:</div>
 					<input type="text" v-model="genre" placeholder="rock and/or roll" />
 				</div>
-				<div v-if="isInProgress">Working...</div>
+				<div id="working-label" v-if="isInProgress">Working...</div>
 				<div v-else>
 					<button @click="go">GO</button>
 				</div>
 			</div>
 			<hr />
-			<div id="player-panel"></div>
+			<div id="player-panel">
+				<div ref="player"></div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -67,6 +69,25 @@ export default {
 	},
 
 	methods: {
+		play(videoId) {
+			this.player = new window.YT.Player(this.$refs.player, {
+				videoId,
+				playerVars: {
+					autoplay: 0,
+					controls: 1,
+				},
+				events: {
+					onStateChange: this.onPlayerStateChange,
+				},
+			});
+		},
+
+		onPlayerStateChange(event) {
+			if (event.data === window.YT.PlayerState.ENDED) {
+				console.log('ended');
+			}
+		},
+
 		async go() {
 			if (!this.key) {
 				this.error = 'You must first give me the key!';
@@ -76,8 +97,12 @@ export default {
 
 			this.isInProgress = true;
 			this.playlist = await this.getPlaylist();
-			// const videoUrls = await searchYouTube(query);
-			// console.log('videoUrls', videoUrls);
+
+			const firstEntry = this.playlist[0];
+			const query = `"${firstEntry.title}" by ${firstEntry.artist}`;
+			const videoIds = await this.searchYouTube(query);
+			console.log('videoUrls', videoIds);
+			this.play(videoIds[0]);
 			this.isInProgress = false;
 		},
 
@@ -92,13 +117,15 @@ export default {
 					type: 'video',
 					maxResults: maxResults,
 					key,
+					videoEmbeddable: 'true',
 				},
 			});
 
 			// Extract video URLs from the response
 			const videos = response.data.items.map(item => {
-				const videoId = item.id.videoId;
-				return `https://www.youtube.com/watch?v=${videoId}`;
+				return item.id.videoId;
+				// const videoId = item.id.videoId;
+				// return `https://www.youtube.com/watch?v=${videoId}`;
 			});
 
 			return videos;
@@ -217,6 +244,22 @@ export default {
 		// console.log('encrypted', enc);
 		// console.log('decrypted', this.decrypt(enc, this.key));
 	},
+
+	mounted() {
+		// If the YouTube IFrame API is not yet loaded, load it asynchronously.
+		// Once it finishes loading, it calls `window.onYouTubeIframeAPIReady`,
+		// which we set to our `initializePlayer` method.
+		if (window.YT) {
+			// If already loaded, just initialize immediately
+			// this.initializePlayer();
+		} else {
+			const tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+
+			// window.onYouTubeIframeAPIReady = this.initializePlayer;
+			document.head.appendChild(tag);
+		}
+	},
 };
 </script>
 
@@ -261,6 +304,10 @@ export default {
 	background-color: darkgray;
 	border-radius: 8px;
 	margin: 12px;
+}
+
+#working-label {
+	margin-top: 12px;
 }
 
 .input-label {
