@@ -15,13 +15,20 @@
 			</div>
 		</div>
 		<div id="right-panel">
+			<div id="error" v-if="error">
+				{{ error }}
+			</div>
 			<div id="input-panel">
 				<div>
-					<div>Playlist description:</div>
+					<div class="input-label">Key:</div>
+					<input type="text" v-model="key" placeholder="only you would know..." />
+				</div>
+				<div>
+					<div class="input-label">Playlist description:</div>
 					<textarea v-model="playlistDescription" placeholder="monkey songs" />
 				</div>
 				<div>
-					<div>Genre:</div>
+					<div class="input-label">Genre:</div>
 					<input type="text" v-model="genre" placeholder="rock and/or roll" />
 				</div>
 				<div v-if="isInProgress">Working...</div>
@@ -39,6 +46,10 @@
 const axios = require('axios');
 const OpenAI = require('openai');
 
+const ASCII_START = 32; // Space
+const ASCII_END = 126; // '~'
+const ASCII_RANGE = ASCII_END - ASCII_START + 1; // 95
+
 export default {
 	name: 'App',
 
@@ -50,11 +61,19 @@ export default {
 			genre: null,
 			isInProgress: false,
 			playlist: null,
+			key: localStorage.encKey,
+			error: null,
 		};
 	},
 
 	methods: {
 		async go() {
+			if (!this.key) {
+				this.error = 'You must first give me the key!';
+				return;
+			}
+			localStorage.encKey = this.key;
+
 			this.isInProgress = true;
 			this.playlist = await this.getPlaylist();
 			// const videoUrls = await searchYouTube(query);
@@ -65,7 +84,7 @@ export default {
 		async searchYouTube(query, maxResults = 4) {
 			const apiUrl = 'https://www.googleapis.com/youtube/v3/search';
 
-			const key = 'AIza' + 'SyB728y' + 'Fdfqjj1' + 'ORnX6v' + 'deTD2L' + 'Ct5DObRBQ';
+			const key = this.decrypt(':03Ijt6{+~2.{aeOcwg:&S*[]Ll,IG7Y.+gJi=E', this.key);
 			const response = await axios.get(apiUrl, {
 				params: {
 					part: 'snippet',
@@ -86,15 +105,10 @@ export default {
 		},
 
 		async getPlaylist() {
-			const key =
-				'sk' +
-				'-balloonary-app' +
-				'-PJkym0CI' +
-				'aSTq87kt3lg' +
-				'eT3BlbkFJ' +
-				'iNvlkhLN' +
-				'j6cdFD8' +
-				'bseBR';
+			const key = this.decrypt(
+				'lREJxg`ThUyZ1(UUish2#tat<0y;kl,{d[KT~`Hw;SzS]E]3oS$PcI^z\\K^,O]gJ;9',
+				this.key
+			);
 			const openai = new OpenAI({ apiKey: key, dangerouslyAllowBrowser: true });
 
 			const numTracks = 8;
@@ -145,9 +159,64 @@ export default {
 			// console.log('json', json);
 			return json;
 		},
+
+		wrapToPrintable(charCode) {
+			// Shift so that ASCII_START becomes 0,
+			// then wrap with modulo, then shift back
+			return ASCII_START + ((charCode - ASCII_START + ASCII_RANGE) % ASCII_RANGE);
+		},
+
+		/**
+		 * Encrypts a string with a rotating key such that all output characters
+		 * remain in the printable ASCII range [32..126].
+		 *
+		 * For each character in plaintext:
+		 * - Convert it to 0-based index by subtracting 32.
+		 * - Convert key character similarly, then combine (add).
+		 * - Wrap with modulo 95, shift back into ASCII range.
+		 */
+		encrypt(plaintext, key) {
+			let encrypted = '';
+			for (let i = 0; i < plaintext.length; i++) {
+				// Current plaintext character
+				const ptCharCode = this.wrapToPrintable(plaintext.charCodeAt(i));
+				// Current key character, rotating through key
+				const keyIndex = i % key.length;
+				const keyShiftRaw = key.charCodeAt(keyIndex);
+				// Also wrap the key character to keep it in [32..126]
+				const keyShift = this.wrapToPrintable(keyShiftRaw) - ASCII_START;
+
+				// Now shift plaintext by the key
+				const newChar = this.wrapToPrintable(ptCharCode + keyShift);
+				encrypted += String.fromCharCode(newChar);
+			}
+			return encrypted;
+		},
+
+		/**
+		 * Decrypts the string by reversing the rotating-key shifts.
+		 */
+		decrypt(ciphertext, key) {
+			let decrypted = '';
+			for (let i = 0; i < ciphertext.length; i++) {
+				const ctCharCode = this.wrapToPrintable(ciphertext.charCodeAt(i));
+				const keyIndex = i % key.length;
+				const keyShiftRaw = key.charCodeAt(keyIndex);
+				const keyShift = this.wrapToPrintable(keyShiftRaw) - ASCII_START;
+
+				// Reverse the shift that was done in encryption
+				const originalChar = this.wrapToPrintable(ctCharCode - keyShift);
+				decrypted += String.fromCharCode(originalChar);
+			}
+			return decrypted;
+		},
 	},
 
-	async created() {},
+	async created() {
+		// const enc = this.encrypt('some API key', this.key);
+		// console.log('encrypted', enc);
+		// console.log('decrypted', this.decrypt(enc, this.key));
+	},
 };
 </script>
 
@@ -187,12 +256,24 @@ export default {
 	margin-bottom: 8px;
 }
 
+#error {
+	color: red;
+	background-color: darkgray;
+	border-radius: 8px;
+	margin: 12px;
+}
+
+.input-label {
+	font-weight: bold;
+	margin-top: 8px;
+}
+
 button {
 	background-color: crimson;
 	color: white;
 	min-width: 80px;
 	min-height: 24px;
-	margin: 4px;
+	margin-top: 12px;
 	border-radius: 6px;
 	cursor: pointer;
 }
