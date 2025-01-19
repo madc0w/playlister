@@ -70,7 +70,15 @@ export default {
 
 	methods: {
 		play(videoId) {
-			window.open(`https://www.youtube.com/watch?v=${videoId}`, 'playlister');
+			console.log('this.playerTab', this.playerTab);
+			this.playerTab?.close();
+			// if (this.playerTab && !this.playerTab.closed) {
+			// 	this.playerTab.close();
+			// }
+			this.playerTab = window.open(
+				`https://www.youtube.com/watch?v=${videoId}`,
+				'playlister'
+			);
 			// this.player = new window.YT.Player(this.$refs.player, {
 			// 	videoId,
 			// 	playerVars: {
@@ -109,7 +117,7 @@ export default {
 				const duration = this.parseIsoDurationSecs(video.contentDetails.duration);
 				console.log('duration', duration);
 				// await sleep(duration * 1000);
-				await sleep(2000);
+				await sleep(4000);
 			}
 		},
 
