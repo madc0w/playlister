@@ -38,7 +38,7 @@
 			</div>
 			<hr />
 			<div id="player-panel">
-				<div ref="player"></div>
+				<!-- <div ref="player"></div> -->
 			</div>
 		</div>
 	</div>
@@ -70,16 +70,17 @@ export default {
 
 	methods: {
 		play(videoId) {
-			this.player = new window.YT.Player(this.$refs.player, {
-				videoId,
-				playerVars: {
-					autoplay: 0,
-					controls: 1,
-				},
-				events: {
-					onStateChange: this.onPlayerStateChange,
-				},
-			});
+			window.open(`https://www.youtube.com/watch?v=${videoId}`, 'playlister');
+			// this.player = new window.YT.Player(this.$refs.player, {
+			// 	videoId,
+			// 	playerVars: {
+			// 		autoplay: 0,
+			// 		controls: 1,
+			// 	},
+			// 	events: {
+			// 		onStateChange: this.onPlayerStateChange,
+			// 	},
+			// });
 		},
 
 		onPlayerStateChange(event) {
@@ -100,13 +101,19 @@ export default {
 
 			const firstEntry = this.playlist[0];
 			const query = `"${firstEntry.title}" by ${firstEntry.artist}`;
-			const videoIds = await this.searchYouTube(query);
-			console.log('videoUrls', videoIds);
-			this.play(videoIds[0]);
+			const videos = await this.searchYouTube(query);
 			this.isInProgress = false;
+			// console.log('videos', videos);
+			for (const video of videos) {
+				this.play(video.id);
+				const duration = this.parseIsoDurationSecs(video.contentDetails.duration);
+				console.log('duration', duration);
+				// await sleep(duration * 1000);
+				await sleep(2000);
+			}
 		},
 
-		async searchYouTube(query, maxResults = 4) {
+		async searchYouTube(query, maxResults = 16) {
 			const apiUrl = 'https://www.googleapis.com/youtube/v3/search';
 
 			const key = this.decrypt(':03Ijt6{+~2.{aeOcwg:&S*[]Ll,IG7Y.+gJi=E', this.key);
@@ -115,9 +122,9 @@ export default {
 					part: 'snippet',
 					q: query,
 					type: 'video',
-					maxResults: maxResults,
+					maxResults,
 					key,
-					videoEmbeddable: 'true',
+					// videoEmbeddable: 'true',  // fail
 				},
 			});
 
@@ -128,7 +135,29 @@ export default {
 				// return `https://www.youtube.com/watch?v=${videoId}`;
 			});
 
-			return videos;
+			const videosResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+				params: {
+					part: 'contentDetails',
+					id: videos.join(','),
+					key,
+				},
+			});
+			return videosResponse.data.items || [];
+		},
+
+		/**
+		 * Convert an ISO 8601 duration (e.g. "PT1H2M3S") into seconds.
+		 */
+		parseIsoDurationSecs(isoDuration) {
+			// Match patterns like "PT1H2M3S", "PT45M", "PT10S", etc.
+			const match = isoDuration.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+			if (!match) return '0:00'; // fallback if format is unexpected
+
+			const [, hours, minutes, seconds] = match.map(v =>
+				v === undefined ? 0 : parseInt(v, 10)
+			);
+
+			return hours * 3600 + minutes * 60 + seconds;
 		},
 
 		async getPlaylist() {
@@ -259,8 +288,15 @@ export default {
 			// window.onYouTubeIframeAPIReady = this.initializePlayer;
 			document.head.appendChild(tag);
 		}
+
+		// this.play('DCpmJHFMNRI');
+		// this.play('8-61YbIwFx8');
 	},
 };
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 </script>
 
 <style>
