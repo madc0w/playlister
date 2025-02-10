@@ -19,6 +19,7 @@
 				{{ error }}
 			</div>
 			<div id="input-panel">
+				<YouTubePlaylistCreator />
 				<div>
 					<div class="input-label">Key:</div>
 					<input type="text" v-model="key" placeholder="only you would know..." />
@@ -47,15 +48,24 @@
 <script>
 const axios = require('axios');
 const OpenAI = require('openai');
+// const { google } = require('googleapis');
+// const http = require('http');
+// const url = require('url');
 
 const ASCII_START = 32; // Space
 const ASCII_END = 126; // '~'
 const ASCII_RANGE = ASCII_END - ASCII_START + 1; // 95
+// const clientId = '*vJzM0+}1|L M(&|ZSPwNo$Z[~MLK-[I0Z&Q(qZJ_yHS\'f"FiW,u~jcLeL.[|mWTg[}V,)WTf';
+// const clientSecret = '@6[;gS!(n=Z,+\KSG(n8-\mGJ[NUoJ97?S3';
+
+import YouTubePlaylistCreator from './components/YouTubePlaylistCreator.vue';
 
 export default {
 	name: 'App',
 
-	components: {},
+	components: {
+		YouTubePlaylistCreator,
+	},
 
 	data() {
 		return {
@@ -68,34 +78,80 @@ export default {
 		};
 	},
 
-	methods: {
-		play(videoId) {
-			console.log('this.playerTab', this.playerTab);
-			this.playerTab?.close();
-			// if (this.playerTab && !this.playerTab.closed) {
-			// 	this.playerTab.close();
-			// }
-			this.playerTab = window.open(
-				`https://www.youtube.com/watch?v=${videoId}`,
-				'playlister'
-			);
-			// this.player = new window.YT.Player(this.$refs.player, {
-			// 	videoId,
-			// 	playerVars: {
-			// 		autoplay: 0,
-			// 		controls: 1,
-			// 	},
-			// 	events: {
-			// 		onStateChange: this.onPlayerStateChange,
-			// 	},
-			// });
-		},
+	// head() {
+	// 	return {
+	// 		script: [{ src: 'https://accounts.google.com/gsi/client' }],
+	// 	};
+	// },
 
-		onPlayerStateChange(event) {
-			if (event.data === window.YT.PlayerState.ENDED) {
-				console.log('ended');
-			}
-		},
+	methods: {
+		/**
+		 * Create an OAuth2 client with the given credentials, prompt the user for consent,
+		 * and exchange the authorization code for tokens (access token + refresh token).
+		 */
+		// async obtainYouTubeAccessToken() {
+		// 	// 1) Insert your OAuth 2.0 credentials from Google Cloud Console
+		// 	const clientId = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+		// 	const clientSecret = 'YOUR_CLIENT_SECRET';
+		// 	const redirectUri = 'http://localhost:3000/oauth2callback';
+		// 	// Make sure this matches one of your authorized redirect URIs in Google Cloud Console
+
+		// 	// 2) Create the OAuth2 client
+		// 	const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+
+		// 	// 3) Define the scope(s) you need. For managing YouTube playlists, you can use "youtube" or "youtube.force-ssl".
+		// 	//    The user will see these scopes listed during consent.
+		// 	const scopes = ['https://www.googleapis.com/auth/youtube'];
+
+		// 	// 4) Generate a URL for the user to visit, to grant consent
+		// 	const authorizeUrl = oauth2Client.generateAuthUrl({
+		// 		access_type: 'offline', // offline => gives a refresh token
+		// 		scope: scopes,
+		// 		prompt: 'consent', // forces the user to see the consent screen again
+		// 	});
+
+		// 	console.log('Open this URL in a browser to authorize:', authorizeUrl);
+
+		// 	// 5) Start a simple HTTP server to receive the authorization code via the redirect URI
+		// 	const server = http
+		// 		.createServer(async (req, res) => {
+		// 			if (req.url.startsWith('/oauth2callback')) {
+		// 				// Parse the query params from the URL
+		// 				const qs = new url.URL(req.url, 'http://localhost:3000').searchParams;
+		// 				const code = qs.get('code');
+
+		// 				if (!code) {
+		// 					res.end('No code found in query parameters');
+		// 					return;
+		// 				}
+
+		// 				// 6) Exchange the authorization code for tokens
+		// 				try {
+		// 					const { tokens } = await oauth2Client.getToken(code);
+		// 					// tokens.access_token => short-lived token
+		// 					// tokens.refresh_token => use to get new access_token without user consent
+
+		// 					// 7) Set the credentials in the OAuth2 client for future requests
+		// 					oauth2Client.setCredentials(tokens);
+
+		// 					console.log('Access Token:', tokens.access_token);
+		// 					console.log('Refresh Token:', tokens.refresh_token);
+		// 					console.log('Tokens object:', tokens);
+
+		// 					res.end('Authorization successful! You can close this tab.');
+		// 					server.close();
+		// 				} catch (err) {
+		// 					console.error('Error exchanging code for tokens:', err);
+		// 					res.end('Error exchanging code for tokens. Check console for details.');
+		// 				}
+		// 			} else {
+		// 				res.end('Invalid endpoint');
+		// 			}
+		// 		})
+		// 		.listen(3000, () => {
+		// 			console.log('Listening on http://localhost:3000 ...');
+		// 		});
+		// },
 
 		async go() {
 			if (!this.key) {
@@ -113,11 +169,12 @@ export default {
 			this.isInProgress = false;
 			// console.log('videos', videos);
 			for (const video of videos) {
-				this.play(video.id);
-				const duration = this.parseIsoDurationSecs(video.contentDetails.duration);
-				console.log('duration', duration);
+				console.log('video', video);
+				// this.play(video.id);
+				// const duration = this.parseIsoDurationSecs(video.contentDetails.duration);
+				// console.log('duration', duration);
 				// await sleep(duration * 1000);
-				await sleep(4000);
+				// await sleep(4000);
 			}
 		},
 
@@ -277,34 +334,36 @@ export default {
 	},
 
 	async created() {
-		// const enc = this.encrypt('some API key', this.key);
-		// console.log('encrypted', enc);
-		// console.log('decrypted', this.decrypt(enc, this.key));
+		const enc = this.encrypt('', this.key);
+		console.log('encrypted', enc);
+		console.log('decrypted', this.decrypt(enc, this.key));
 	},
 
 	mounted() {
-		// If the YouTube IFrame API is not yet loaded, load it asynchronously.
-		// Once it finishes loading, it calls `window.onYouTubeIframeAPIReady`,
-		// which we set to our `initializePlayer` method.
-		if (window.YT) {
-			// If already loaded, just initialize immediately
-			// this.initializePlayer();
-		} else {
-			const tag = document.createElement('script');
-			tag.src = 'https://www.youtube.com/iframe_api';
-
-			// window.onYouTubeIframeAPIReady = this.initializePlayer;
-			document.head.appendChild(tag);
-		}
-
 		// this.play('DCpmJHFMNRI');
 		// this.play('8-61YbIwFx8');
+		console.log('mounted');
+		const script = document.createElement('script');
+		script.src = 'https://accounts.google.com/gsi/client';
+		script.async = true;
+		script.defer = true;
+		// script.onload = () => {
+		// 	if (window.google?.accounts) {
+		// 		resolve();
+		// 	} else {
+		// 		reject(new Error('Google Identity Services failed to load.'));
+		// 	}
+		// };
+		// script.onerror = () => {
+		// 	reject(new Error('Google Identity Services failed to load.'));
+		// };
+		document.head.appendChild(script);
 	},
 };
 
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
+// function sleep(ms) {
+// 	return new Promise(resolve => setTimeout(resolve, ms));
+// }
 </script>
 
 <style>
