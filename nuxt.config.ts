@@ -1,0 +1,45 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+	compatibilityDate: '2024-11-01',
+	devtools: { enabled: true },
+
+	// Heroku configuration
+	nitro: {
+		preset: 'node-server',
+		compressPublicAssets: true,
+	},
+
+	runtimeConfig: {
+		// Private keys (only available server-side)
+		openaiApiKey: process.env.OPENAI_API_KEY || '',
+		googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+		googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+		oauth: {
+			google: {
+				clientId: process.env.GOOGLE_CLIENT_ID || '',
+				clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+				redirectURL:
+					process.env.OAUTH_REDIRECT_URL || 'http://localhost:3000/api/auth/google',
+			},
+		},
+
+		public: {
+			// Public keys (exposed to client)
+			apiBase: process.env.API_BASE || '/api',
+		},
+	},
+
+	app: {
+		head: {
+			title: 'Playlister',
+			meta: [
+				{ charset: 'utf-8' },
+				{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
+				{ name: 'description', content: 'Create playlists with AI' },
+			],
+			link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+		},
+	},
+
+	modules: ['nuxt-auth-utils'],
+});
