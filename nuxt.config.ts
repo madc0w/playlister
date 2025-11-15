@@ -12,15 +12,6 @@ export default defineNuxtConfig({
 	runtimeConfig: {
 		// Private keys (only available server-side)
 		openaiApiKey: process.env.OPENAI_API_KEY || '',
-		googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-		googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-		oauth: {
-			google: {
-				clientId: process.env.GOOGLE_CLIENT_ID || '',
-				clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-				redirectURL: process.env.OAUTH_REDIRECT_URL,
-			},
-		},
 
 		public: {
 			// Public keys (exposed to client)
