@@ -1,19 +1,19 @@
 <template>
 	<div class="container">
+		<div v-if="session?.user" class="user-info">
+			<img
+				v-if="session.user.picture"
+				:src="session.user.picture"
+				alt="Profile"
+				class="avatar"
+			/>
+			<span>{{ session.user.name }}</span>
+			<button @click="logout" class="logout-btn">Sign Out</button>
+		</div>
+
 		<header>
 			<h1>🎵 Playlister</h1>
 			<p>Create amazing YouTube playlists with AI</p>
-
-			<div v-if="session?.user" class="user-info">
-				<img
-					v-if="session.user.picture"
-					:src="session.user.picture"
-					alt="Profile"
-					class="avatar"
-				/>
-				<span>{{ session.user.name }}</span>
-				<button @click="logout" class="logout-btn">Sign Out</button>
-			</div>
 		</header>
 
 		<main>
@@ -263,12 +263,27 @@ function resetForm() {
 	margin: 0 auto;
 	padding: 2rem;
 	min-height: 100vh;
+	position: relative;
+}
+
+.user-info {
+	position: absolute;
+	top: 2rem;
+	right: 2rem;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	background: white;
+	padding: 0.5rem 1rem;
+	border-radius: 50px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	z-index: 10;
 }
 
 header {
 	text-align: center;
 	margin-bottom: 3rem;
-	position: relative;
+	padding-top: 3rem;
 }
 
 header h1 {
@@ -283,19 +298,6 @@ header h1 {
 header p {
 	font-size: 1.2rem;
 	color: #666;
-}
-
-.user-info {
-	position: absolute;
-	top: 0;
-	right: 0;
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	background: white;
-	padding: 0.5rem 1rem;
-	border-radius: 50px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .avatar {
@@ -598,14 +600,20 @@ header p {
 		padding: 1rem;
 	}
 
+	header {
+		padding-top: 4rem;
+	}
+
 	header h1 {
 		font-size: 2rem;
 	}
 
 	.user-info {
-		position: static;
+		position: fixed;
+		top: 1rem;
+		right: 1rem;
+		left: 1rem;
 		justify-content: center;
-		margin-top: 1rem;
 	}
 
 	.card {
