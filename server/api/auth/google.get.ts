@@ -1,8 +1,12 @@
 export default defineOAuthGoogleEventHandler({
 	config: {
-		scope: ['email', 'profile', 'https://www.googleapis.com/auth/youtube'],
+		scope: ['email', 'profile', 'https://www.googleapis.com/auth/youtube.force-ssl'],
 	},
 	async onSuccess(event, { user, tokens }) {
+		console.log('=== OAuth Success ===');
+		console.log('User:', user);
+		console.log('Tokens:', { ...tokens, access_token: '***', refresh_token: '***' });
+
 		await setUserSession(event, {
 			user: {
 				google: user.email,
@@ -15,11 +19,14 @@ export default defineOAuthGoogleEventHandler({
 			loggedInAt: Date.now(),
 		});
 
+		console.log('Session set, redirecting to /');
 		return sendRedirect(event, '/');
 	},
 	// Optional, will return a json error and 401 status code by default
 	onError(event, error) {
-		console.error('Google OAuth error:', error);
+		console.error('=== Google OAuth Error ===');
+		console.error('Error:', error);
+		console.error('Error stack:', error.stack);
 		return sendRedirect(event, '/?error=oauth_failed');
 	},
 });
