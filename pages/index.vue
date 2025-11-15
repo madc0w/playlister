@@ -13,7 +13,7 @@
 
 		<header>
 			<h1>🎵 Playlister</h1>
-			<p>Create amazing YouTube playlists with AI</p>
+			<p>Create YouTube playlists with AI</p>
 		</header>
 
 		<main>
@@ -46,12 +46,12 @@
 					</div>
 
 					<div class="form-group">
-						<label for="playlistTitle">Playlist title</label>
+						<label for="playlistTitle">Playlist title (optional)</label>
 						<input
 							id="playlistTitle"
 							v-model="playlistTitle"
 							type="text"
-							placeholder="My Awesome Playlist"
+							placeholder="Awesome Trax"
 							class="input"
 						/>
 					</div>
@@ -212,7 +212,7 @@ async function generatePlaylist() {
 
 		// Auto-generate title if not provided
 		if (!playlistTitle.value.trim()) {
-			playlistTitle.value = `${keywords.value} - Playlist`;
+			playlistTitle.value = keywords.value.trim().substring(0, 40);
 		}
 	} catch (err) {
 		console.error('Failed to generate playlist:', err);
