@@ -250,7 +250,19 @@ async function generatePlaylist() {
 
 		// Append to existing playlist or create new one
 		if (generatedPlaylist.value) {
-			generatedPlaylist.value = [...generatedPlaylist.value, ...response.playlist];
+			// Filter out duplicates based on song name and artist (case-insensitive)
+			const existingSongs = new Set(
+				generatedPlaylist.value.map(
+					song => `${song.name.toLowerCase()}|${song.artist.toLowerCase()}`
+				)
+			);
+
+			const newSongs = response.playlist.filter(song => {
+				const songKey = `${song.name.toLowerCase()}|${song.artist.toLowerCase()}`;
+				return !existingSongs.has(songKey);
+			});
+
+			generatedPlaylist.value = [...generatedPlaylist.value, ...newSongs];
 		} else {
 			generatedPlaylist.value = response.playlist;
 		}
