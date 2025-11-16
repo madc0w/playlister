@@ -3,6 +3,9 @@ export default defineNuxtConfig({
 	compatibilityDate: '2024-11-01',
 	devtools: { enabled: true },
 
+	// Load critical CSS first
+	css: ['~/assets/css/critical.css'],
+
 	// Heroku configuration
 	nitro: {
 		preset: 'node-server',
@@ -28,6 +31,9 @@ export default defineNuxtConfig({
 				{ name: 'description', content: 'Create Youtube playlists with AI' },
 			],
 			link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.png' }],
+		},
+		rootAttrs: {
+			style: 'background: #f5f5f5;',
 		},
 	},
 

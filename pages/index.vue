@@ -32,7 +32,7 @@
 				<h2>Create Your Playlist</h2>
 
 				<!-- Input Section -->
-				<div v-if="!generatedPlaylist" class="input-section">
+				<div v-if="!youtubePlaylist" class="input-section">
 					<div class="form-group">
 						<label for="keywords">Describe your playlist</label>
 						<input
@@ -72,7 +72,13 @@
 						:disabled="isGenerating || !keywords"
 						class="create-btn"
 					>
-						{{ isGenerating ? 'Generating...' : 'Create Playlist' }}
+						{{
+							isGenerating
+								? 'Generating...'
+								: generatedPlaylist
+								? 'Add More Songs'
+								: 'Create Playlist'
+						}}
 					</button>
 
 					<div v-if="error" class="error">{{ error }}</div>
@@ -97,6 +103,13 @@
 									>
 								</div>
 							</div>
+							<button
+								@click="removeSong(index)"
+								class="remove-btn"
+								title="Remove song"
+							>
+								✕
+							</button>
 						</div>
 					</div>
 
@@ -235,7 +248,12 @@ async function generatePlaylist() {
 			},
 		});
 
-		generatedPlaylist.value = response.playlist;
+		// Append to existing playlist or create new one
+		if (generatedPlaylist.value) {
+			generatedPlaylist.value = [...generatedPlaylist.value, ...response.playlist];
+		} else {
+			generatedPlaylist.value = response.playlist;
+		}
 
 		// Auto-generate title if not provided
 		if (!playlistTitle.value.trim()) {
@@ -246,6 +264,12 @@ async function generatePlaylist() {
 		error.value = err.data?.statusMessage || 'Failed to generate playlist. Please try again.';
 	} finally {
 		isGenerating.value = false;
+	}
+}
+
+function removeSong(index) {
+	if (generatedPlaylist.value) {
+		generatedPlaylist.value = generatedPlaylist.value.filter((_, i) => i !== index);
 	}
 }
 
@@ -526,6 +550,28 @@ header p {
 .song-year {
 	color: #999;
 	font-size: 0.85rem;
+}
+
+.remove-btn {
+	background: #fff;
+	border: 1px solid #e0e0e0;
+	color: #dc3545;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	cursor: pointer;
+	font-size: 1.2rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s;
+	flex-shrink: 0;
+}
+
+.remove-btn:hover {
+	background: #dc3545;
+	color: white;
+	border-color: #dc3545;
 }
 
 .action-buttons {

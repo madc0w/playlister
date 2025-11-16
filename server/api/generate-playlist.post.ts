@@ -68,12 +68,23 @@ Generate diverse, popular, and relevant songs that match the mood and theme of t
 		// Extract JSON from response (in case GPT adds markdown code blocks)
 		let jsonContent = content.trim();
 		if (jsonContent.startsWith('```json')) {
-			jsonContent = jsonContent.replace(/^```json\n/, '').replace(/\n```$/, '');
+			jsonContent = jsonContent.replace(/^```json\n?/, '').replace(/\n?```$/, '');
 		} else if (jsonContent.startsWith('```')) {
-			jsonContent = jsonContent.replace(/^```\n/, '').replace(/\n```$/, '');
+			jsonContent = jsonContent.replace(/^```\n?/, '').replace(/\n?```$/, '');
 		}
 
-		const playlist = JSON.parse(jsonContent);
+		// Log the raw response for debugging
+		console.log('Raw OpenAI response:', content);
+		console.log('Cleaned JSON content:', jsonContent);
+
+		let playlist;
+		try {
+			playlist = JSON.parse(jsonContent);
+		} catch (parseError: any) {
+			console.error('JSON Parse Error:', parseError.message);
+			console.error('Failed to parse content:', jsonContent);
+			throw new Error(`Invalid JSON response from OpenAI: ${parseError.message}`);
+		}
 
 		// Validate the response structure
 		if (!Array.isArray(playlist)) {
