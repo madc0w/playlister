@@ -124,7 +124,13 @@
 						<button @click="resetForm" class="secondary-btn">Start Over</button>
 					</div>
 
-					<div v-if="error" class="error">{{ error }}</div>
+					<div v-if="error === 'auth_expired'" class="error auth-error">
+						<p>Your YouTube authentication has expired.</p>
+						<button @click="signInWithGoogle" class="reauth-btn">
+							Sign in with Google again
+						</button>
+					</div>
+					<div v-else-if="error" class="error">{{ error }}</div>
 				</div>
 
 				<!-- YouTube Playlist Created -->
@@ -304,8 +310,16 @@ async function createYouTubePlaylist() {
 		youtubePlaylist.value = response;
 	} catch (err) {
 		console.error('Failed to create YouTube playlist:', err);
-		error.value =
-			err.data?.statusMessage || 'Failed to create YouTube playlist. Please try again.';
+
+		// Check if authentication expired
+		if (err.statusCode === 401 && err.data?.statusMessage === 'auth_expired') {
+			error.value = 'auth_expired';
+		} else {
+			error.value =
+				err.data?.reason ||
+				err.data?.statusMessage ||
+				'Failed to create YouTube playlist. Please try again.';
+		}
 	} finally {
 		isCreating.value = false;
 	}
@@ -511,6 +525,34 @@ header p {
 	padding: 1rem;
 	border-radius: 8px;
 	text-align: center;
+}
+
+.auth-error {
+	background: #fff3cd;
+	color: #856404;
+	border: 1px solid #ffeaa7;
+}
+
+.auth-error p {
+	margin-bottom: 1rem;
+	font-weight: 500;
+}
+
+.reauth-btn {
+	background: #667eea;
+	color: white;
+	border: none;
+	padding: 0.75rem 1.5rem;
+	border-radius: 6px;
+	font-size: 1rem;
+	cursor: pointer;
+	transition: all 0.2s;
+	font-weight: 500;
+}
+
+.reauth-btn:hover {
+	background: #5568d3;
+	transform: translateY(-1px);
 }
 
 .playlist-preview h3 {

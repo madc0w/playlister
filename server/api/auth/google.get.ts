@@ -1,6 +1,10 @@
 export default defineOAuthGoogleEventHandler({
 	config: {
 		scope: ['email', 'profile', 'https://www.googleapis.com/auth/youtube.force-ssl'],
+		authorizationParams: {
+			access_type: 'offline',
+			prompt: 'consent',
+		},
 	},
 	async onSuccess(event, { user, tokens }) {
 		console.log('=== OAuth Success ===');
