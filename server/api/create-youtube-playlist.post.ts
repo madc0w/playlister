@@ -32,8 +32,8 @@ export default defineEventHandler(async event => {
 		// Set up OAuth2 client
 		const config = useRuntimeConfig();
 		const oauth2Client = new google.auth.OAuth2(
-			config.googleClientId,
-			config.googleClientSecret,
+			config.oauth.google.clientId,
+			config.oauth.google.clientSecret,
 			config.oauth.google.redirectURL
 		);
 
@@ -108,12 +108,14 @@ export default defineEventHandler(async event => {
 					addedSongs.push({
 						name: song.name,
 						artist: song.artist,
+						year: song.year,
 						videoId: videoId,
 					});
 				} else {
 					failedSongs.push({
 						name: song.name,
 						artist: song.artist,
+						year: song.year,
 						reason: 'Video not found',
 					});
 				}
@@ -122,6 +124,7 @@ export default defineEventHandler(async event => {
 				failedSongs.push({
 					name: song.name,
 					artist: song.artist,
+					year: song.year,
 					reason: 'Failed to add to playlist',
 				});
 			}

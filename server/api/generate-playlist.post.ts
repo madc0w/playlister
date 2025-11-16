@@ -14,7 +14,7 @@ export default defineEventHandler(async event => {
 
 	// Get keywords from request body
 	const body = await readBody(event);
-	const { keywords } = body;
+	const { keywords, genre } = body;
 
 	if (!keywords || typeof keywords !== 'string') {
 		throw createError({
@@ -30,12 +30,13 @@ export default defineEventHandler(async event => {
 
 	try {
 		// Create GPT prompt
-		const prompt = `Generate a playlist of 20 songs based on these keywords: "${keywords}".
-Return ONLY a JSON array of objects with "name" and "artist" fields. No additional text or explanation.
+		const genreContext = genre ? ` Focus specifically on ${genre} music.` : '';
+		const prompt = `Generate a playlist of 20 songs based on these keywords: "${keywords}".${genreContext}
+Return ONLY a JSON array of objects with "name", "artist", and "year" fields. No additional text or explanation.
 Example format:
 [
-  {"name": "Song Title", "artist": "Artist Name"},
-  {"name": "Another Song", "artist": "Another Artist"}
+  {"name": "Song Title", "artist": "Artist Name", "year": 2020},
+  {"name": "Another Song", "artist": "Another Artist", "year": 2015}
 ]
 
 Generate diverse, popular, and relevant songs that match the mood and theme of the keywords.`;
@@ -85,6 +86,7 @@ Generate diverse, popular, and relevant songs that match the mood and theme of t
 			.map(song => ({
 				name: song.name,
 				artist: song.artist,
+				year: song.year || null,
 			}));
 
 		if (validatedPlaylist.length === 0) {

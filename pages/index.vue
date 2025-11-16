@@ -46,6 +46,17 @@
 					</div>
 
 					<div class="form-group">
+						<label for="genre">Genre (optional)</label>
+						<input
+							id="genre"
+							v-model="genre"
+							type="text"
+							placeholder="e.g., jazz, rock, hip-hop, classical..."
+							class="input"
+						/>
+					</div>
+
+					<div class="form-group">
 						<label for="playlistTitle">Playlist title (optional)</label>
 						<input
 							id="playlistTitle"
@@ -79,7 +90,12 @@
 							<span class="song-number">{{ index + 1 }}</span>
 							<div class="song-info">
 								<div class="song-name">{{ song.name }}</div>
-								<div class="song-artist">{{ song.artist }}</div>
+								<div class="song-artist">
+									{{ song.artist
+									}}<span v-if="song.year" class="song-year">
+										({{ song.year }})</span
+									>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -137,7 +153,12 @@
 								>
 									<div class="song-info">
 										<div class="song-name">{{ song.name }}</div>
-										<div class="song-artist">{{ song.artist }}</div>
+										<div class="song-artist">
+											{{ song.artist
+											}}<span v-if="song.year" class="song-year">
+												({{ song.year }})</span
+											>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -160,6 +181,7 @@ useHead({
 
 const session = ref(null);
 const keywords = ref('');
+const genre = ref('');
 const playlistTitle = ref('');
 const isGenerating = ref(false);
 const isCreating = ref(false);
@@ -197,7 +219,7 @@ async function logout() {
 
 async function generatePlaylist() {
 	if (!keywords.value.trim()) {
-		error.value = 'Please enter some keywords';
+		error.value = 'Please enter some keywords.';
 		return;
 	}
 
@@ -209,6 +231,7 @@ async function generatePlaylist() {
 			method: 'POST',
 			body: {
 				keywords: keywords.value,
+				genre: genre.value.trim() || undefined,
 			},
 		});
 
@@ -254,6 +277,7 @@ async function createYouTubePlaylist() {
 
 function resetForm() {
 	keywords.value = '';
+	genre.value = '';
 	playlistTitle.value = '';
 	error.value = '';
 	generatedPlaylist.value = null;
@@ -497,6 +521,11 @@ header p {
 .song-artist {
 	color: #666;
 	font-size: 0.9rem;
+}
+
+.song-year {
+	color: #999;
+	font-size: 0.85rem;
 }
 
 .action-buttons {
