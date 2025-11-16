@@ -1,4 +1,11 @@
 import { google } from 'googleapis';
+import { createError, defineEventHandler, readBody } from 'h3';
+
+// @ts-ignore - Auto-imported functions from Nuxt/Nitro
+declare global {
+	function getUserSession(event: any): Promise<any>;
+	function useRuntimeConfig(): any;
+}
 
 export default defineEventHandler(async event => {
 	// Check if user is authenticated
@@ -91,26 +98,59 @@ export default defineEventHandler(async event => {
 				const videoId = searchResponse.data.items?.[0]?.id?.videoId;
 
 				if (videoId) {
-					// Add video to playlist
-					await youtube.playlistItems.insert({
-						part: ['snippet'],
-						requestBody: {
-							snippet: {
-								playlistId: playlistId,
-								resourceId: {
-									kind: 'youtube#video',
-									videoId: videoId,
-								},
-							},
-						},
+					// Get video details to check duration
+					const videoDetails = await youtube.videos.list({
+						part: ['contentDetails'],
+						id: [videoId],
 					});
 
-					addedSongs.push({
-						name: song.name,
-						artist: song.artist,
-						year: song.year,
-						videoId: videoId,
-					});
+					const duration = videoDetails.data.items?.[0]?.contentDetails?.duration;
+
+					// Parse ISO 8601 duration format (e.g., PT4M33S = 4 minutes 33 seconds)
+					let durationInSeconds = 0;
+					if (duration) {
+						const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+						if (match) {
+							const hours = parseInt(match[1] || '0');
+							const minutes = parseInt(match[2] || '0');
+							const seconds = parseInt(match[3] || '0');
+							durationInSeconds = hours * 3600 + minutes * 60 + seconds;
+						}
+					}
+
+					// Only add videos less than 12 minutes (720 seconds)
+					if (durationInSeconds > 0 && durationInSeconds < 720) {
+						// Add video to playlist
+						await youtube.playlistItems.insert({
+							part: ['snippet'],
+							requestBody: {
+								snippet: {
+									playlistId: playlistId,
+									resourceId: {
+										kind: 'youtube#video',
+										videoId: videoId,
+									},
+								},
+							},
+						});
+
+						addedSongs.push({
+							name: song.name,
+							artist: song.artist,
+							year: song.year,
+							videoId: videoId,
+						});
+					} else {
+						failedSongs.push({
+							name: song.name,
+							artist: song.artist,
+							year: song.year,
+							reason:
+								durationInSeconds >= 720
+									? 'Video too long (>12 minutes)'
+									: 'Duration unknown',
+						});
+					}
 				} else {
 					failedSongs.push({
 						name: song.name,
