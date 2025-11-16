@@ -146,6 +146,10 @@
 				</div>
 			</div>
 		</main>
+
+		<footer class="footer">
+			<NuxtLink to="/privacy" class="privacy-link">Privacy Policy</NuxtLink>
+		</footer>
 	</div>
 </template>
 
@@ -593,6 +597,24 @@ header p {
 	margin-top: 1rem;
 	margin-bottom: 0;
 	max-height: 200px;
+}
+
+.footer {
+	text-align: center;
+	margin-top: 3rem;
+	padding: 1.5rem;
+	border-top: 1px solid #e0e0e0;
+}
+
+.privacy-link {
+	color: #666;
+	text-decoration: none;
+	font-size: 0.9rem;
+	transition: color 0.2s;
+}
+
+.privacy-link:hover {
+	color: #667eea;
 }
 
 @media (max-width: 768px) {
