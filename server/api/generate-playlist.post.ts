@@ -1,11 +1,6 @@
+import { useRuntimeConfig } from '#imports';
 import { createError, defineEventHandler, readBody } from 'h3';
 import OpenAI from 'openai';
-
-// @ts-ignore - Auto-imported functions from Nuxt/Nitro
-declare global {
-	function getUserSession(event: any): Promise<any>;
-	function useRuntimeConfig(): any;
-}
 
 export default defineEventHandler(async event => {
 	const config = useRuntimeConfig();

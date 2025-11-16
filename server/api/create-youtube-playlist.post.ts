@@ -1,11 +1,6 @@
+import { useRuntimeConfig } from '#imports';
 import { google } from 'googleapis';
 import { createError, defineEventHandler, readBody } from 'h3';
-
-// @ts-ignore - Auto-imported functions from Nuxt/Nitro
-declare global {
-	function getUserSession(event: any): Promise<any>;
-	function useRuntimeConfig(): any;
-}
 
 export default defineEventHandler(async event => {
 	// Check if user is authenticated
