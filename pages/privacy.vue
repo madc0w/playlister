@@ -167,6 +167,25 @@
 					data is stored temporarily and authentication tokens expire according to
 					Google's policies.
 				</p>
+				<h3>API Data Refresh and Deletion</h3>
+				<ul>
+					<li>
+						<strong>Access Tokens:</strong> Automatically refreshed every hour according
+						to Google's OAuth policies
+					</li>
+					<li>
+						<strong>Session Data:</strong> Cleared when you sign out or after 30 days of
+						inactivity
+					</li>
+					<li>
+						<strong>YouTube API Data:</strong> Search results and playlist information
+						are processed in real-time and not permanently stored
+					</li>
+					<li>
+						<strong>User Data Deletion:</strong> All your data is immediately deleted
+						when you revoke access through your Google Account permissions page
+					</li>
+				</ul>
 			</section>
 
 			<section>
