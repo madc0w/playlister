@@ -2,6 +2,14 @@ import { useRuntimeConfig } from '#imports';
 import { google } from 'googleapis';
 import { createError, defineEventHandler, readBody } from 'h3';
 
+// Quota costs for YouTube Data API v3
+const QUOTA_COSTS = {
+	search: 100,
+	playlistInsert: 50,
+	playlistItemInsert: 50,
+	videosList: 1,
+};
+
 export default defineEventHandler(async event => {
 	// Check if user is authenticated
 	const session = await getUserSession(event);
@@ -29,6 +37,27 @@ export default defineEventHandler(async event => {
 			statusMessage: 'Playlist title is required',
 		});
 	}
+
+	// Initialize quota tracking
+	let quotaUsed = 0;
+	const quotaDetails: Record<string, number> = {
+		search: 0,
+		playlistInsert: 0,
+		playlistItemInsert: 0,
+		videosList: 0,
+	};
+	const startTime = Date.now();
+
+	console.log('=== Starting YouTube Playlist Creation ===');
+	console.log(`Playlist: "${title}"`);
+	console.log(`Songs to add: ${playlist.length}`);
+	console.log(
+		`Estimated quota cost: ${
+			QUOTA_COSTS.playlistInsert +
+			playlist.length * QUOTA_COSTS.search +
+			playlist.length * QUOTA_COSTS.playlistItemInsert
+		}`
+	);
 
 	try {
 		// Set up OAuth2 client
@@ -121,14 +150,18 @@ export default defineEventHandler(async event => {
 				snippet: {
 					title: title,
 					description:
-						description ||
-						`Playlist created by Playlister - ${new Date().toLocaleDateString()}`,
+						description || `Playlist created - ${new Date().toLocaleDateString()}`,
 				},
 				status: {
 					privacyStatus: 'public',
 				},
 			},
 		});
+		quotaUsed += QUOTA_COSTS.playlistInsert;
+		quotaDetails.playlistInsert++;
+		console.log(
+			`✓ Playlist created (Quota: +${QUOTA_COSTS.playlistInsert}, Total: ${quotaUsed})`
+		);
 
 		const playlistId = playlistResponse.data.id;
 
@@ -142,6 +175,7 @@ export default defineEventHandler(async event => {
 		const videoIdMap = new Map(); // Map song to videoId
 
 		// Step 1: Search for all songs and collect video IDs
+		console.log(`\n--- Searching for ${playlist.length} songs ---`);
 		for (const song of playlist) {
 			try {
 				const searchQuery = `${song.name} ${song.artist}`;
@@ -151,6 +185,8 @@ export default defineEventHandler(async event => {
 					type: ['video'],
 					maxResults: 1, // Reduced to 1 to save quota
 				});
+				quotaUsed += QUOTA_COSTS.search;
+				quotaDetails.search++;
 
 				const videoId = searchResponse.data.items?.[0]?.id?.videoId;
 
@@ -175,45 +211,47 @@ export default defineEventHandler(async event => {
 			}
 		}
 
-		// Step 2: Batch check video durations (up to 50 at a time)
-		const videoIds = Array.from(videoIdMap.values());
-		const validVideoIds = new Set();
+		// // Step 2: Batch check video durations (up to 50 at a time)
+		// const videoIds = Array.from(videoIdMap.values());
+		// const validVideoIds = new Set();
 
-		for (let i = 0; i < videoIds.length; i += 50) {
-			const batch = videoIds.slice(i, i + 50);
-			try {
-				const videoDetails = await youtube.videos.list({
-					part: ['contentDetails'],
-					id: batch,
-				});
+		// for (let i = 0; i < videoIds.length; i += 50) {
+		// 	const batch = videoIds.slice(i, i + 50);
+		// 	try {
+		// 		const videoDetails = await youtube.videos.list({
+		// 			part: ['contentDetails'],
+		// 			id: batch,
+		// 		});
 
-				videoDetails.data.items?.forEach(item => {
-					const duration = item.contentDetails?.duration;
-					let durationInSeconds = 0;
+		// 		videoDetails.data.items?.forEach(item => {
+		// 			const duration = item.contentDetails?.duration;
+		// 			let durationInSeconds = 0;
 
-					if (duration) {
-						const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-						if (match) {
-							const hours = parseInt(match[1] || '0');
-							const minutes = parseInt(match[2] || '0');
-							const seconds = parseInt(match[3] || '0');
-							durationInSeconds = hours * 3600 + minutes * 60 + seconds;
-						}
-					}
+		// 			if (duration) {
+		// 				const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+		// 				if (match) {
+		// 					const hours = parseInt(match[1] || '0');
+		// 					const minutes = parseInt(match[2] || '0');
+		// 					const seconds = parseInt(match[3] || '0');
+		// 					durationInSeconds = hours * 3600 + minutes * 60 + seconds;
+		// 				}
+		// 			}
 
-					// Only include videos less than 12 minutes
-					if (durationInSeconds > 0 && durationInSeconds < 720) {
-						validVideoIds.add(item.id);
-					}
-				});
-			} catch (error) {
-				console.error('Failed to fetch video details batch:', error);
-			}
-		}
+		// 			// Only include videos less than 12 minutes
+		// 			if (durationInSeconds > 0 && durationInSeconds < 720) {
+		// 				validVideoIds.add(item.id);
+		// 			}
+		// 		});
+		// 	} catch (error) {
+		// 		console.error('Failed to fetch video details batch:', error);
+		// 	}
+		// }
 
 		// Step 3: Add valid videos to playlist
+		console.log(`\n--- Adding ${videoIdMap.size} videos to playlist ---`);
+		const videoIds = Array.from(videoIdMap.values());
 		for (const [song, videoId] of videoIdMap) {
-			if (validVideoIds.has(videoId)) {
+			if (videoIds.includes(videoId)) {
 				try {
 					await youtube.playlistItems.insert({
 						part: ['snippet'],
@@ -227,6 +265,8 @@ export default defineEventHandler(async event => {
 							},
 						},
 					});
+					quotaUsed += QUOTA_COSTS.playlistItemInsert;
+					quotaDetails.playlistItemInsert++;
 
 					addedSongs.push({
 						name: song.name,
@@ -253,6 +293,28 @@ export default defineEventHandler(async event => {
 			}
 		}
 
+		const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+		console.log('\n=== Playlist Creation Complete ===');
+		console.log(`Duration: ${duration}s`);
+		console.log(`Total Quota Used: ${quotaUsed}`);
+		console.log('Quota Breakdown:');
+		console.log(
+			`  - Playlist Insert: ${quotaDetails.playlistInsert} × ${
+				QUOTA_COSTS.playlistInsert
+			} = ${quotaDetails.playlistInsert * QUOTA_COSTS.playlistInsert}`
+		);
+		console.log(
+			`  - Search: ${quotaDetails.search} × ${QUOTA_COSTS.search} = ${
+				quotaDetails.search * QUOTA_COSTS.search
+			}`
+		);
+		console.log(
+			`  - Playlist Item Insert: ${quotaDetails.playlistItemInsert} × ${
+				QUOTA_COSTS.playlistItemInsert
+			} = ${quotaDetails.playlistItemInsert * QUOTA_COSTS.playlistItemInsert}`
+		);
+		console.log(`Songs: ${addedSongs.length} added, ${failedSongs.length} failed`);
+
 		return {
 			success: true,
 			playlistId: playlistId,
@@ -263,6 +325,17 @@ export default defineEventHandler(async event => {
 				total: playlist.length,
 				added: addedSongs.length,
 				failed: failedSongs.length,
+			},
+			quota: {
+				total: quotaUsed,
+				breakdown: {
+					playlistInsert: quotaDetails.playlistInsert * QUOTA_COSTS.playlistInsert,
+					search: quotaDetails.search * QUOTA_COSTS.search,
+					playlistItemInsert:
+						quotaDetails.playlistItemInsert * QUOTA_COSTS.playlistItemInsert,
+					videosList: quotaDetails.videosList * QUOTA_COSTS.videosList,
+				},
+				operations: quotaDetails,
 			},
 		};
 	} catch (error: any) {
