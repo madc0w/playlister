@@ -82,6 +82,49 @@
 			</section>
 
 			<section>
+				<h2>Cookies and Local Storage</h2>
+				<p>
+					Our service stores, accesses, and collects information on your device to provide
+					and improve our functionality:
+				</p>
+				<h3>Authentication Data</h3>
+				<ul>
+					<li>
+						<strong>Cookies:</strong> We use cookies to maintain your login session and
+						remember your authentication state
+					</li>
+					<li>
+						<strong>Local Storage:</strong> We store authentication tokens and session
+						data in your browser's local storage to keep you signed in
+					</li>
+				</ul>
+				<h3>Third-Party Cookies</h3>
+				<p>Third-party services we use may also set cookies on your device:</p>
+				<ul>
+					<li>
+						<strong>Google OAuth:</strong> Google sets cookies during the authentication
+						process to verify your identity and maintain your session
+					</li>
+					<li>
+						<strong>YouTube API:</strong> YouTube may set cookies when you interact with
+						playlist creation features
+					</li>
+				</ul>
+				<h3>Managing Cookies</h3>
+				<p>
+					You can control and delete cookies through your browser settings. However,
+					disabling cookies may prevent you from using certain features of our service,
+					including sign-in functionality. Most browsers allow you to:
+				</p>
+				<ul>
+					<li>View what cookies are stored and delete them individually</li>
+					<li>Block third-party cookies</li>
+					<li>Block all cookies</li>
+					<li>Delete all cookies when you close your browser</li>
+				</ul>
+			</section>
+
+			<section>
 				<h2>Your Rights</h2>
 				<p>You have the right to:</p>
 				<ul>
