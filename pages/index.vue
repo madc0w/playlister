@@ -20,7 +20,26 @@
 			<!-- Sign In Card -->
 			<div v-if="!session?.user" class="card auth-card">
 				<h2>Welcome to Playlister</h2>
-				<p>Sign in with your Google account to create AI-powered YouTube playlists</p>
+				<p class="subtitle">Creating an AI-powered YouTube playlist is so easy!</p>
+				<div class="features">
+					<div class="feature">
+						<span class="feature-icon">🎯</span>
+						<span>Describe your desired playlist with keywords</span>
+					</div>
+					<div class="feature">
+						<span class="feature-icon">🤖</span>
+						<span>Let AI generate a list of songs for you</span>
+					</div>
+					<div class="feature">
+						<span class="feature-icon">✨</span>
+						<span>Continue generating more tracks, remove ones you don't like</span>
+					</div>
+					<div class="feature">
+						<span class="feature-icon">▶️</span>
+						<span>Create the playlist directly on your YouTube account</span>
+					</div>
+				</div>
+				<p class="cta-text">Sign in with your Google account to get started</p>
 				<button @click="signInWithGoogle" class="google-btn">
 					<span class="google-icon">G</span>
 					Sign in with Google
@@ -411,13 +430,58 @@ header p {
 }
 
 .auth-card h2 {
-	margin-bottom: 1rem;
+	margin-bottom: 0.5rem;
 	color: #667eea;
+	font-size: 2rem;
 }
 
-.auth-card p {
-	color: #666;
+.auth-card .subtitle {
+	color: #888;
 	margin-bottom: 2rem;
+	font-size: 1.1rem;
+}
+
+.features {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-bottom: 2rem;
+	max-width: 400px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.feature {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	text-align: left;
+	padding: 0.75rem 1rem;
+	background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+	border-radius: 10px;
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature:hover {
+	transform: translateX(5px);
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.feature-icon {
+	font-size: 1.5rem;
+	flex-shrink: 0;
+}
+
+.feature span:last-child {
+	color: #555;
+	font-size: 0.95rem;
+	line-height: 1.4;
+}
+
+.auth-card .cta-text {
+	color: #667eea;
+	margin-bottom: 1.5rem;
+	font-weight: 500;
 }
 
 .google-btn {
