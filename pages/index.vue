@@ -24,19 +24,19 @@
 				<div class="features">
 					<div class="feature">
 						<span class="feature-icon">🎯</span>
-						<span>Describe your desired playlist with keywords</span>
+						<span>Describe your desired playlist with keywords.</span>
 					</div>
 					<div class="feature">
 						<span class="feature-icon">🤖</span>
-						<span>Let AI generate a list of songs for you</span>
+						<span>Let AI generate a list of songs for you.</span>
 					</div>
 					<div class="feature">
 						<span class="feature-icon">✨</span>
-						<span>Continue generating more tracks, remove ones you don't like</span>
+						<span>Continue generating more tracks, remove ones you don't like.</span>
 					</div>
 					<div class="feature">
 						<span class="feature-icon">▶️</span>
-						<span>Create the playlist directly on your YouTube account</span>
+						<span>Create the playlist directly on your YouTube account.</span>
 					</div>
 				</div>
 				<p class="cta-text">Sign in with your Google account to get started</p>
