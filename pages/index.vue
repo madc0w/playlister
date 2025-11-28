@@ -19,7 +19,7 @@
 		<main>
 			<!-- Sign In Card -->
 			<div v-if="!session?.user" class="card auth-card">
-				<h2>Welcome to Playlister</h2>
+				<!-- <h2>Welcome to Playlister</h2> -->
 				<p class="subtitle">Creating an AI-powered YouTube playlist is so easy!</p>
 				<div class="features">
 					<div class="feature">
