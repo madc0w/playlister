@@ -1,13 +1,6 @@
 <template>
 	<div class="container">
 		<div v-if="session?.user" class="user-info">
-			<img
-				v-if="session.user.picture"
-				:src="session.user.picture"
-				alt="Profile"
-				class="avatar"
-			/>
-			<span>{{ session.user.name }}</span>
 			<button @click="logout" class="logout-btn">Sign Out</button>
 		</div>
 

@@ -1,6 +1,6 @@
 export default defineOAuthGoogleEventHandler({
 	config: {
-		scope: ['email', 'profile', 'https://www.googleapis.com/auth/youtube.force-ssl'],
+		scope: ['https://www.googleapis.com/auth/youtube.force-ssl'],
 		authorizationParams: {
 			access_type: 'offline',
 			prompt: 'consent',
@@ -12,11 +12,7 @@ export default defineOAuthGoogleEventHandler({
 		console.log('Tokens:', { ...tokens, access_token: '***', refresh_token: '***' });
 
 		await setUserSession(event, {
-			user: {
-				google: user.email,
-				name: user.name,
-				picture: user.picture,
-			},
+			user: {},
 			accessToken: tokens.access_token,
 			refreshToken: tokens.refresh_token,
 			expiryDate: tokens.expiry_date,
