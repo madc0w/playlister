@@ -1,6 +1,13 @@
 <template>
 	<div class="container">
 		<div v-if="session?.user" class="user-info">
+			<img
+				v-if="session.user.picture"
+				:src="session.user.picture"
+				:alt="session.user.name"
+				class="avatar"
+			/>
+			<span class="user-email">{{ session.user.email }}</span>
 			<button @click="logout" class="logout-btn">Sign Out</button>
 		</div>
 
@@ -394,6 +401,11 @@ header p {
 	width: 32px;
 	height: 32px;
 	border-radius: 50%;
+}
+
+.user-email {
+	color: #333;
+	font-size: 0.9rem;
 }
 
 .logout-btn {
