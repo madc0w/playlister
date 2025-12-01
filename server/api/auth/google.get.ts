@@ -1,6 +1,6 @@
 export default defineOAuthGoogleEventHandler({
 	config: {
-		scope: ['https://www.googleapis.com/auth/youtube.force-ssl'],
+		scope: ['openid', 'https://www.googleapis.com/auth/youtube.force-ssl'],
 		authorizationParams: {
 			access_type: 'offline',
 			prompt: 'consent',
