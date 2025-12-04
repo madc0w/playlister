@@ -7,9 +7,9 @@ export default defineOAuthGoogleEventHandler({
 		},
 	},
 	async onSuccess(event, { user, tokens }) {
-		console.log('=== OAuth Success ===');
-		console.log('User:', user);
-		console.log('Tokens:', { ...tokens, access_token: '***', refresh_token: '***' });
+		// console.log('=== OAuth Success ===');
+		// console.log('User:', user);
+		// console.log('Tokens:', { ...tokens, access_token: '***', refresh_token: '***' });
 
 		await setUserSession(event, {
 			user: {},
@@ -19,7 +19,7 @@ export default defineOAuthGoogleEventHandler({
 			loggedInAt: Date.now(),
 		});
 
-		console.log('Session set, redirecting to /');
+		// console.log('Session set, redirecting to /');
 		return sendRedirect(event, '/');
 	},
 	// Optional, will return a json error and 401 status code by default

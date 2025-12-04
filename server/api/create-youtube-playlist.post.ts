@@ -176,36 +176,36 @@ export default defineEventHandler(async event => {
 
 		// Step 1: Search for all songs and collect video IDs
 		console.log(`\n--- Searching for ${playlist.length} songs ---`);
-		for (const song of playlist) {
+		for (const track of playlist) {
 			try {
-				const searchQuery = `${song.name} ${song.artist}`;
+				const searchQuery = `${track.name} ${track.artist}`;
 				const searchResponse = await youtube.search.list({
 					part: ['snippet'],
 					q: searchQuery,
 					type: ['video'],
+					videoCategoryId: '10', // Music category
 					maxResults: 1, // Reduced to 1 to save quota
 				});
 				quotaUsed += QUOTA_COSTS.search;
 				quotaDetails.search++;
 
 				const videoId = searchResponse.data.items?.[0]?.id?.videoId;
-
 				if (videoId) {
-					videoIdMap.set(song, videoId);
+					videoIdMap.set(track, videoId);
 				} else {
 					failedSongs.push({
-						name: song.name,
-						artist: song.artist,
-						year: song.year,
+						name: track.name,
+						artist: track.artist,
+						year: track.year,
 						reason: 'Video not found',
 					});
 				}
 			} catch (error) {
-				console.error(`Failed to search for song: ${song.name} - ${song.artist}`, error);
+				console.error(`Failed to search for song: ${track.name} - ${track.artist}`, error);
 				failedSongs.push({
-					name: song.name,
-					artist: song.artist,
-					year: song.year,
+					name: track.name,
+					artist: track.artist,
+					year: track.year,
 					reason: 'Search failed',
 				});
 			}
