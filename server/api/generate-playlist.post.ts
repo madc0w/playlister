@@ -33,7 +33,7 @@ export default defineEventHandler(async event => {
 	try {
 		// Create GPT prompt
 		const genreContext = genre ? ` Focus specifically on ${genre} music.` : '';
-		const prompt = `Generate a playlist of 20 songs based on these keywords: "${keywords}".${genreContext}
+		const prompt = `Generate a playlist of 20 tracks based on these keywords: "${keywords}".${genreContext}
 Return ONLY a JSON array of objects with "name", "artist", and "year" fields. No additional text or explanation.
 Example format:
 [
@@ -41,7 +41,7 @@ Example format:
   {"name": "Another Song", "artist": "Another Artist", "year": 2015}
 ]
 
-Generate diverse, popular, and relevant songs that match the mood and theme of the keywords.`;
+List relevant tracks that match the mood and theme of the keywords. The tracks must be available as YouTube videos.`;
 
 		// Call OpenAI API
 		const response = await openai.chat.completions.create({
@@ -50,7 +50,7 @@ Generate diverse, popular, and relevant songs that match the mood and theme of t
 				{
 					role: 'system',
 					content:
-						'You are a music expert who creates perfect playlists. You always respond with valid JSON arrays only, no other text.',
+						'You are a music expert who creates perfect YouTube playlists. You always respond with valid JSON arrays only, no other text.',
 				},
 				{
 					role: 'user',
