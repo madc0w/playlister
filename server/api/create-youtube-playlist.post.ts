@@ -80,53 +80,54 @@ export default defineEventHandler(async event => {
 			});
 		}
 
-		// Set credentials from session
-		oauth2Client.setCredentials({
-			access_token: session.accessToken as string,
-			refresh_token: session.refreshToken as string,
-			expiry_date: session.expiryDate as number,
-		});
-
-		// Listen for token refresh
-		oauth2Client.on('tokens', async tokens => {
-			console.log('Tokens refreshed automatically');
-			if (tokens.refresh_token) {
-				// Store the new refresh token
-				await setUserSession(event, {
-					...session,
-					accessToken: tokens.access_token,
-					refreshToken: tokens.refresh_token,
-					expiryDate: tokens.expiry_date,
-				});
-			} else if (tokens.access_token) {
-				// Update just the access token if no refresh token
-				await setUserSession(event, {
-					...session,
-					accessToken: tokens.access_token,
-					expiryDate: tokens.expiry_date,
-				});
-			}
-		});
+		// Track current tokens in local variables to avoid race conditions
+		let currentAccessToken = session.accessToken as string;
+		let currentRefreshToken = session.refreshToken as string;
+		let currentExpiryDate = session.expiryDate as number;
 
 		// Check if token is expired or about to expire (within 5 minutes)
 		const now = Date.now();
-		const expiryDate = session.expiryDate as number;
-		if (!expiryDate || expiryDate < now + 5 * 60 * 1000) {
+		console.log(
+			`Token check - Expiry: ${currentExpiryDate}, Now: ${now}, Diff: ${
+				currentExpiryDate - now
+			}ms`
+		);
+
+		if (!currentExpiryDate || currentExpiryDate < now + 5 * 60 * 1000) {
 			console.log('Token expired or expiring soon, refreshing...');
+
+			// Set credentials with only refresh token to perform refresh
+			oauth2Client.setCredentials({
+				refresh_token: currentRefreshToken,
+			});
+
 			try {
 				const { credentials } = await oauth2Client.refreshAccessToken();
-				oauth2Client.setCredentials(credentials);
+
+				if (!credentials.access_token) {
+					throw new Error('No access token received from refresh');
+				}
+
+				// Update local token variables
+				currentAccessToken = credentials.access_token;
+				currentRefreshToken = credentials.refresh_token || currentRefreshToken;
+				currentExpiryDate = credentials.expiry_date || Date.now() + 3600 * 1000;
 
 				// Update session with new tokens
 				await setUserSession(event, {
 					...session,
-					accessToken: credentials.access_token,
-					refreshToken: credentials.refresh_token || session.refreshToken,
-					expiryDate: credentials.expiry_date,
+					accessToken: currentAccessToken,
+					refreshToken: currentRefreshToken,
+					expiryDate: currentExpiryDate,
 				});
+
 				console.log('Token refreshed successfully');
+				console.log(
+					`New expiry: ${currentExpiryDate} (in ${currentExpiryDate - Date.now()}ms)`
+				);
 			} catch (refreshError: any) {
 				console.error('Failed to refresh token:', refreshError.message);
+				console.error('Refresh error details:', JSON.stringify(refreshError, null, 2));
 				throw createError({
 					statusCode: 401,
 					statusMessage: 'auth_expired',
@@ -137,11 +138,20 @@ export default defineEventHandler(async event => {
 			}
 		}
 
-		// Initialize YouTube API
+		// Set credentials with current (possibly refreshed) tokens BEFORE creating YouTube client
+		oauth2Client.setCredentials({
+			access_token: currentAccessToken,
+			refresh_token: currentRefreshToken,
+			expiry_date: currentExpiryDate,
+		});
+
+		// Initialize YouTube API with properly configured client
 		const youtube = google.youtube({
 			version: 'v3',
 			auth: oauth2Client,
 		});
+
+		console.log(`Using access token: ${currentAccessToken?.substring(0, 20)}...`);
 
 		// Create a new playlist
 		const playlistResponse = await youtube.playlists.insert({
