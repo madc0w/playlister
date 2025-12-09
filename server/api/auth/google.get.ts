@@ -7,19 +7,25 @@ export default defineOAuthGoogleEventHandler({
 		},
 	},
 	async onSuccess(event, { user, tokens }) {
-		// console.log('=== OAuth Success ===');
-		// console.log('User:', user);
-		// console.log('Tokens:', { ...tokens, access_token: '***', refresh_token: '***' });
+		console.log('=== OAuth Success ===');
+		console.log('Access token received:', !!tokens.access_token);
+		console.log('Refresh token received:', !!tokens.refresh_token);
+		console.log('Expiry date received:', tokens.expiry_date);
+		console.log('Token type:', tokens.token_type);
+		console.log('Scope received:', tokens.scope);
+
+		// Calculate expiry date if not provided (token usually valid for 1 hour)
+		const expiryDate = tokens.expiry_date || Date.now() + 3600 * 1000;
 
 		await setUserSession(event, {
 			user: {},
 			accessToken: tokens.access_token,
 			refreshToken: tokens.refresh_token,
-			expiryDate: tokens.expiry_date,
+			expiryDate: expiryDate,
 			loggedInAt: Date.now(),
 		});
 
-		// console.log('Session set, redirecting to /');
+		console.log('Session set with expiry:', expiryDate);
 		return sendRedirect(event, '/');
 	},
 	// Optional, will return a json error and 401 status code by default

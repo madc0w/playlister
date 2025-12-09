@@ -152,21 +152,40 @@ export default defineEventHandler(async event => {
 		});
 
 		console.log(`Using access token: ${currentAccessToken?.substring(0, 20)}...`);
+		console.log(`Refresh token exists: ${!!currentRefreshToken}`);
+		console.log(`OAuth client ID: ${config.oauth.google.clientId?.substring(0, 20)}...`);
 
 		// Create a new playlist
-		const playlistResponse = await youtube.playlists.insert({
-			part: ['snippet', 'status'],
-			requestBody: {
-				snippet: {
-					title: title,
-					description:
-						description || `Playlist created - ${new Date().toLocaleDateString()}`,
+		let playlistResponse;
+		try {
+			playlistResponse = await youtube.playlists.insert({
+				part: ['snippet', 'status'],
+				requestBody: {
+					snippet: {
+						title: title,
+						description:
+							description || `Playlist created - ${new Date().toLocaleDateString()}`,
+					},
+					status: {
+						privacyStatus: 'public',
+					},
 				},
-				status: {
-					privacyStatus: 'public',
-				},
-			},
-		});
+			});
+		} catch (apiError: any) {
+			console.error('YouTube API Error Details:');
+			console.error('Status:', apiError.code || apiError.status);
+			console.error('Message:', apiError.message);
+			if (apiError.response?.data?.error) {
+				console.error(
+					'Error object:',
+					JSON.stringify(apiError.response.data.error, null, 2)
+				);
+			}
+			if (apiError.errors) {
+				console.error('Errors array:', JSON.stringify(apiError.errors, null, 2));
+			}
+			throw apiError;
+		}
 		quotaUsed += QUOTA_COSTS.playlistInsert;
 		quotaDetails.playlistInsert++;
 		console.log(
