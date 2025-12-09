@@ -149,6 +149,23 @@
 							Sign in with Google again
 						</button>
 					</div>
+					<div
+						v-else-if="error === 'youtube_channel_required'"
+						class="error channel-error"
+					>
+						<p>📺 Your Google account doesn't have a YouTube channel yet.</p>
+						<p>You need a YouTube channel to create playlists.</p>
+						<a
+							href="https://www.youtube.com/create_channel"
+							target="_blank"
+							class="channel-btn"
+						>
+							Create YouTube Channel
+						</a>
+						<p class="channel-hint">
+							After creating your channel, come back and try again!
+						</p>
+					</div>
 					<div v-else-if="error" class="error">{{ error }}</div>
 				</div>
 
@@ -333,6 +350,11 @@ async function createYouTubePlaylist() {
 		// Check if authentication expired
 		if (err.statusCode === 401 && err.data?.statusMessage === 'auth_expired') {
 			error.value = 'auth_expired';
+		} else if (
+			err.statusCode === 403 &&
+			err.data?.statusMessage === 'youtube_channel_required'
+		) {
+			error.value = 'youtube_channel_required';
 		} else {
 			error.value =
 				err.data?.reason ||
@@ -605,6 +627,47 @@ header p {
 .auth-error p {
 	margin-bottom: 1rem;
 	font-weight: 500;
+}
+
+.channel-error {
+	background: #e3f2fd;
+	color: #1565c0;
+	border: 1px solid #90caf9;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.channel-error p {
+	margin: 0;
+}
+
+.channel-error p:first-child {
+	font-weight: 600;
+	font-size: 1.1rem;
+}
+
+.channel-btn {
+	display: inline-block;
+	background: #ff0000;
+	color: white;
+	padding: 0.75rem 1.5rem;
+	border-radius: 6px;
+	text-decoration: none;
+	font-weight: 600;
+	transition: all 0.2s;
+	margin: 0.5rem 0;
+}
+
+.channel-btn:hover {
+	background: #cc0000;
+	transform: translateY(-1px);
+}
+
+.channel-hint {
+	font-size: 0.9rem;
+	color: #666;
 }
 
 .reauth-btn {
