@@ -371,13 +371,16 @@ export default defineEventHandler(async event => {
 		console.error('Error creating YouTube playlist:', error);
 
 		// Check for "youtubeSignupRequired" error - user doesn't have a YouTube channel
+		// Note: YouTube API does not support programmatic channel creation (no channels.insert method exists)
+		// Users must create their channel manually
 		const errorReason = error.response?.data?.error?.errors?.[0]?.reason;
 		if (errorReason === 'youtubeSignupRequired') {
 			throw createError({
 				statusCode: 403,
 				statusMessage: 'youtube_channel_required',
 				data: {
-					reason: 'Your Google account does not have a YouTube channel. Please create a YouTube channel first at youtube.com, then try again.',
+					reason: 'Your Google account does not have a YouTube channel. Please create one first, then try again.',
+					createChannelUrl: 'https://www.youtube.com/create_channel',
 				},
 			});
 		}
